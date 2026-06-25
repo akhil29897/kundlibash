@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.dev.vars
+.DS_Store
+
+# Zodiac emblem artwork is a commercial Envato-licensed asset — not redistributed here.
+# The app falls back to typographic glyphs when these are absent.
+public/assets/signs/*.png

@@ -1,0 +1,14 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: interest-cohort=()
+
+/api/*
+  Cache-Control: no-store
+
+/
+  Cache-Control: no-cache, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, must-revalidate

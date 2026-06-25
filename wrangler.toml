@@ -1,0 +1,17 @@
+name = "kundlibash"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "public"
+
+# Bashing data store. ONE KV namespace holds everything:
+#   pred:<date>:<sign>   cached daily predictions (fetched from the astrology API, split into statements)
+#   bash:<uid>:<date>:<sign>   a user's verdicts + accuracy/other notes for that day
+#   note:<uid>:<id>      a user's free-form "other note"
+#   agg:<date>:<sign>    community tally for a sign on a day  (per-statement up/down + bashers)
+#   agg:all:<sign>       community all-time tally for a sign
+#
+# Create the real namespace at deploy time with:
+#   wrangler kv namespace create BASH_KV
+# then paste the returned id below (local `wrangler pages dev --kv BASH_KV` uses a local one and ignores this id).
+[[kv_namespaces]]
+binding = "BASH_KV"
+id = "401f7e2cee3f4bc8ba2bb95bbf01fbac"

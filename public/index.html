@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kundlibash</title>
+<meta name="description" content="Read the day's horoscope, live the day, then bash each line against what actually happened. Did it ring true, or ring hollow? An almanac of verdicts, notes and stars." />
+<meta name="theme-color" content="#0a0d15" />
+<meta property="og:title" content="Kundlibash" />
+<meta property="og:description" content="Take your horoscope with a pinch of celestial salt. Bash today's reading against your reality." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ink:#0a0d15; --ink-2:#0e1320; --panel:rgba(20,25,40,.50); --panel-2:rgba(28,33,50,.55);
+  --ivory:#ece3d0; --ivory-soft:#d4cab4; --parch:#a89e86; --faint:#746c59;
+  --gold:#c6a667; --gold-bright:#e6cd92; --gold-deep:#9c7f47;
+  --rule:rgba(236,227,208,.13); --rule-gold:rgba(198,166,103,.30); --rule-gold-2:rgba(198,166,103,.16);
+  --true:#d9ba79; --hollow:#828daa;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; padding:0; background:var(--ink); color:var(--ivory);
+  font-family:var(--serif); font-weight:400; line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; min-height:100dvh}
+#stars{position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(1100px 620px at 80% -8%, rgba(198,166,103,.10), transparent 60%),
+    radial-gradient(900px 700px at 8% 4%, rgba(130,141,170,.08), transparent 55%),
+    linear-gradient(180deg,#0c1019 0%,#0a0d15 55%,#070a11 100%);}
+.bgcst{position:fixed; z-index:0; pointer-events:none; opacity:.16}
+.wrap{position:relative; z-index:2; max-width:1000px; margin:0 auto; padding:0 22px 90px}
+
+/* eyebrow / caps labels */
+.eyebrow{font-family:var(--sans); font-weight:500; font-size:11.5px; letter-spacing:.32em; text-transform:uppercase; color:var(--gold)}
+.label{font-family:var(--sans); font-weight:500; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--parch)}
+.serif-it{font-style:italic}
+.figs{font-family:var(--sans); font-variant-numeric:tabular-nums}
+a{color:var(--gold-bright); text-decoration:none; border-bottom:1px solid var(--rule-gold)}
+
+/* ---------- nav ---------- */
+header.nav{position:sticky; top:0; z-index:20; backdrop-filter:blur(9px);
+  background:linear-gradient(180deg,rgba(10,13,21,.92),rgba(10,13,21,.4));
+  border-bottom:1px solid var(--rule-gold-2)}
+.nav-in{max-width:1000px; margin:0 auto; padding:15px 22px; display:flex; align-items:center; gap:18px}
+.brand{display:flex; align-items:baseline; gap:10px; cursor:pointer; user-select:none}
+.brand .star{align-self:center; color:var(--gold); font-size:13px}
+.brand .mark{font-family:var(--serif); font-weight:600; font-size:21px; letter-spacing:.01em; color:var(--ivory)}
+.brand .mark em{font-style:italic; color:var(--gold-bright); font-weight:500}
+.tabs{margin-left:auto; display:flex; gap:4px}
+.tab{appearance:none; border:0; background:transparent; cursor:pointer; color:var(--parch);
+  font-family:var(--sans); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+  padding:9px 14px; border-radius:2px; transition:.18s; position:relative}
+.tab:hover{color:var(--ivory)}
+.tab.active{color:var(--gold-bright)}
+.tab.active::after{content:""; position:absolute; left:14px; right:14px; bottom:3px; height:1px; background:var(--gold)}
+.tab .n{font-size:11px; opacity:.7; margin-left:5px}
+
+/* ---------- hero ---------- */
+.hero{text-align:center; padding:72px 10px 30px}
+.hero .eyebrow{display:block; margin-bottom:22px}
+.hero h1{font-family:var(--serif); font-weight:400; font-size:clamp(40px,8vw,78px); line-height:1.02; margin:0; color:var(--ivory); letter-spacing:-.01em}
+.hero h1 em{font-style:italic; color:var(--gold-bright); font-weight:500}
+.hero .ask{font-family:var(--serif); font-style:italic; font-size:clamp(18px,3.2vw,24px); color:var(--ivory-soft); margin-top:14px}
+.hero .tagline{color:var(--parch); max-width:580px; margin:26px auto 0; font-size:17px; line-height:1.7}
+.hero .tagline b{color:var(--ivory); font-weight:500}
+.rule-orn{display:flex; align-items:center; justify-content:center; gap:14px; margin:30px auto; max-width:420px; color:var(--gold)}
+.rule-orn::before,.rule-orn::after{content:""; height:1px; flex:1; background:linear-gradient(90deg,transparent,var(--rule-gold))}
+.rule-orn::after{background:linear-gradient(90deg,var(--rule-gold),transparent)}
+.rule-orn .o{font-size:13px; letter-spacing:.3em}
+.verify{max-width:660px; margin:0 auto; color:var(--ivory-soft); font-size:16.5px; line-height:1.75; font-style:italic}
+.verify b{font-style:normal; color:var(--gold-bright); font-weight:500}
+.scrolldown{display:inline-grid; place-items:center; width:42px; height:42px; margin-top:34px; border:1px solid var(--rule-gold); border-radius:50%; color:var(--gold); transition:.2s}
+.scrolldown:hover{background:rgba(198,166,103,.08)}
+
+/* ---------- section headers ---------- */
+.sec-head{display:flex; align-items:baseline; gap:14px; margin:54px 2px 22px; padding-bottom:14px; border-bottom:1px solid var(--rule-gold-2)}
+.sec-head .rn{font-family:var(--serif); font-style:italic; font-size:15px; color:var(--gold)}
+.sec-head h2{font-family:var(--serif); font-weight:400; font-size:24px; margin:0; color:var(--ivory); letter-spacing:.005em}
+.sec-head .hint{margin-left:auto; font-family:var(--sans); font-size:11.5px; letter-spacing:.04em; color:var(--faint); text-transform:uppercase}
+
+/* ---------- sign picker ---------- */
+.signs{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:0; border-top:1px solid var(--rule); border-left:1px solid var(--rule)}
+.sign{position:relative; cursor:pointer; border-right:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  padding:18px 14px 15px; background:transparent; transition:.2s; text-align:center; overflow:hidden}
+.sign:hover{background:rgba(198,166,103,.05)}
+.sign.sel{background:rgba(198,166,103,.09)}
+.sign.sel::before{content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--gold)}
+.sign .emblem{width:auto; height:84px; max-width:100%; object-fit:contain; display:block; margin:0 auto; transition:transform .22s ease;
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.55))}
+.sign:hover .emblem{transform:translateY(-4px) scale(1.05)}
+.sign.sel .emblem{transform:translateY(-2px) scale(1.03)}
+.sign .nm{font-family:var(--serif); font-size:17px; color:var(--ivory); margin-top:14px}
+.sign.sel .nm{color:var(--gold-bright)}
+.sign .dt{font-family:var(--sans); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-top:3px}
+.sign.sel .dt{color:var(--gold)}
+.signhint{font-family:var(--sans); font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--gold)}
+
+/* ---------- predictions ---------- */
+#predPanel{margin-top:6px}
+.pred-head{display:flex; align-items:flex-start; gap:22px; padding:30px 4px 22px; border-bottom:1px solid var(--rule-gold-2)}
+.pred-head .bigemblem{width:120px; height:120px; object-fit:contain; flex:0 0 auto; filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
+.pred-head h2{font-family:var(--serif); font-weight:400; font-size:clamp(24px,4vw,34px); margin:0; color:var(--ivory); text-transform:capitalize; letter-spacing:-.01em}
+.pred-head .when{font-family:var(--sans); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--parch); margin-top:8px}
+.pred-head .when .src{color:var(--faint)}
+.pred-head .crowd{margin-left:auto; text-align:right; font-family:var(--sans); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); padding-top:8px}
+.pred-head .crowd b{display:block; font-family:var(--serif); font-size:26px; font-weight:400; color:var(--ivory); letter-spacing:0}
+.howto{font-family:var(--serif); font-style:italic; color:var(--parch); font-size:15.5px; padding:18px 4px 6px}
+.howto b{font-style:normal; font-weight:500} .howto b.tr{color:var(--true)} .howto b.ho{color:var(--hollow)}
+
+.stmt{display:grid; grid-template-columns:46px 1fr; gap:8px 18px; padding:24px 4px; border-bottom:1px solid var(--rule)}
+.stmt:last-of-type{border-bottom:1px solid var(--rule)}
+.stmt .rn{font-family:var(--serif); font-style:italic; font-size:22px; color:var(--gold); padding-top:2px}
+.stmt .txt{font-family:var(--serif); font-size:20px; line-height:1.5; color:var(--ivory); font-weight:400}
+.verdicts{grid-column:2; display:flex; gap:26px; margin-top:16px; align-items:center}
+.vbtn{appearance:none; cursor:pointer; background:transparent; border:0; padding:4px 0;
+  font-family:var(--sans); font-size:12px; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--parch); transition:.16s; display:inline-flex; gap:9px; align-items:center}
+.vbtn .mk{width:10px; height:10px; border-radius:50%; border:1px solid currentColor; transition:.16s}
+.vbtn:hover{color:var(--ivory)}
+.vbtn.true.on{color:var(--true)} .vbtn.true.on .mk{background:var(--true); border-color:var(--true); box-shadow:0 0 10px rgba(217,186,121,.5)}
+.vbtn.hollow.on{color:var(--hollow)} .vbtn.hollow.on .mk{background:var(--hollow); border-color:var(--hollow)}
+.vsep{width:1px; height:16px; background:var(--rule)}
+.accnote{grid-column:2; margin-top:14px; display:none}
+.accnote.show{display:block}
+.accnote .lbl{font-family:var(--sans); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-bottom:7px}
+.accnote textarea, .othernote textarea{width:100%; resize:vertical; font-family:var(--serif); font-size:16px; color:var(--ivory);
+  background:rgba(236,227,208,.025); border:1px solid var(--rule-gold-2); border-radius:3px; padding:11px 13px; line-height:1.55}
+.accnote textarea{min-height:42px; max-height:160px}
+.accnote textarea:focus, .othernote textarea:focus{outline:none; border-color:var(--rule-gold); background:rgba(236,227,208,.04)}
+textarea::placeholder{color:var(--faint); font-style:italic}
+
+.crowdbar{grid-column:2; margin-top:16px; display:none}
+.crowdbar.show{display:block}
+.measure{height:3px; background:rgba(130,141,170,.30); display:flex; border-radius:2px; overflow:hidden}
+.measure .fill{background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright)); height:100%}
+.measure-meta{display:flex; justify-content:space-between; font-family:var(--sans); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; margin-top:8px; color:var(--faint)}
+.measure-meta .tr{color:var(--true)} .measure-meta .ho{color:var(--hollow)}
+
+.othernote{margin:30px 0 0; padding-left:64px}
+.othernote .lbl{font-family:var(--sans); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:9px}
+.othernote .lbl span{color:var(--faint); letter-spacing:.04em; text-transform:none; font-style:italic; font-family:var(--serif); font-size:13px}
+.othernote textarea{min-height:70px}
+
+.actionbar{display:flex; align-items:center; gap:22px; margin:28px 0 0; padding-left:64px; flex-wrap:wrap}
+.btn{appearance:none; cursor:pointer; font-family:var(--sans); font-weight:500; font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink); background:var(--gold); border:1px solid var(--gold); padding:13px 30px; border-radius:2px; transition:.18s}
+.btn:hover{background:var(--gold-bright); border-color:var(--gold-bright)}
+.btn:disabled{opacity:.5; cursor:default}
+.btn.ghost{background:transparent; color:var(--parch); border-color:var(--rule-gold)}
+.btn.ghost:hover{color:var(--ivory); border-color:var(--gold); background:transparent}
+.btn.danger{background:transparent; color:var(--hollow); border-color:rgba(130,141,170,.5)}
+.btn.danger:hover{color:#aab2c6; border-color:var(--hollow); background:transparent}
+.savedmsg{font-family:var(--sans); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold)}
+
+/* ---------- stats ---------- */
+.statgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--rule); border:1px solid var(--rule)}
+.stat{padding:22px 20px; background:var(--ink)}
+.stat .big{font-family:var(--serif); font-weight:400; font-size:38px; line-height:1; color:var(--gold-bright); letter-spacing:-.01em}
+.stat .lab{font-family:var(--sans); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--parch); margin-top:9px}
+.stat .measure{margin-top:12px}
+.twocol{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule); border:1px solid var(--rule); margin-bottom:26px}
+.twocol.one{grid-template-columns:1fr}
+.twocol .stat{background:var(--ink)}
+.honor .lab{color:var(--gold)} .honor .nm{font-family:var(--serif); font-size:21px; color:var(--ivory); margin-top:6px}
+.honor.hollow .lab{color:var(--hollow)}
+.lead{border-top:1px solid var(--rule)}
+.lrow{display:grid; grid-template-columns:26px 130px 1fr 50px; align-items:center; gap:14px; padding:13px 6px; border-bottom:1px solid var(--rule)}
+.lrow .g{font-family:var(--serif); font-size:18px; color:var(--gold)}
+.lrow .nm{font-family:var(--serif); font-size:16px; color:var(--ivory-soft)}
+.lrow .nm .tag{font-family:var(--sans); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-left:8px; vertical-align:middle}
+.lrow .track{height:2px; background:rgba(130,141,170,.25)}
+.lrow .track > i{display:block; height:100%; background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright))}
+.lrow .pct{text-align:right; font-family:var(--sans); font-variant-numeric:tabular-nums; font-size:14px; color:var(--ivory)}
+.lrow.king .nm{color:var(--gold-bright)}
+.foot-note{font-family:var(--sans); font-size:10.5px; letter-spacing:.06em; color:var(--faint); margin-top:14px; text-align:center; text-transform:uppercase}
+
+/* ---------- notes ---------- */
+.subtabs{display:flex; gap:24px; margin:0 2px 22px; border-bottom:1px solid var(--rule); padding-bottom:0}
+.subtab{appearance:none; border:0; background:transparent; cursor:pointer; padding:0 0 14px;
+  font-family:var(--sans); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--parch); position:relative; transition:.16s}
+.subtab:hover{color:var(--ivory)}
+.subtab.active{color:var(--gold-bright)}
+.subtab.active::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--gold)}
+.subtab span{opacity:.7}
+.note{padding:22px 4px; border-bottom:1px solid var(--rule)}
+.note .meta{display:flex; align-items:center; gap:12px; font-family:var(--sans); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-bottom:12px}
+.note .meta .gl{font-family:var(--serif); font-size:16px; color:var(--gold); letter-spacing:0}
+.note .meta .vb{letter-spacing:.14em}
+.vb.tr{color:var(--true)} .vb.ho{color:var(--hollow)}
+.note .pred{font-family:var(--serif); font-style:italic; font-size:17px; color:var(--parch); line-height:1.5}
+.note .you{font-family:var(--serif); font-size:18px; color:var(--ivory); margin-top:10px; padding-left:18px; border-left:1px solid var(--rule-gold)}
+.empty{text-align:center; color:var(--faint); padding:54px 16px; font-family:var(--serif); font-style:italic; font-size:17px; border:1px solid var(--rule); border-radius:3px}
+.empty .o{display:block; font-style:normal; color:var(--gold); font-size:16px; letter-spacing:.4em; margin-bottom:14px}
+
+.dz{margin-top:50px; padding-top:24px; border-top:1px solid rgba(130,141,170,.3)}
+.dz h3{font-family:var(--sans); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--hollow); margin:0 0 8px}
+.dz p{font-family:var(--serif); font-style:italic; color:var(--parch); font-size:15px; margin:0 0 16px; max-width:560px}
+
+footer{position:relative; z-index:2; max-width:1000px; margin:0 auto; padding:34px 22px 60px; border-top:1px solid var(--rule-gold-2); text-align:center}
+footer .salt{font-family:var(--sans); font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:var(--gold)}
+footer p{font-family:var(--serif); font-style:italic; color:var(--faint); font-size:14px; max-width:600px; margin:14px auto 0; line-height:1.7}
+
+.view{display:none; animation:fade .5s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.hidden{display:none!important}
+/* fallback when the (licensed, not-bundled) zodiac art is absent — render the sign glyph */
+.glyphfb{display:grid; place-items:center; font-family:var(--serif); color:var(--gold-bright); line-height:1}
+.emblem.glyphfb{height:84px; font-size:46px}
+.bigemblem.glyphfb{width:120px; height:120px; font-size:66px}
+body.shot-read .hero, body.shot-read #pick, body.shot-read #signs{display:none}
+body.shot-pick .hero, body.shot-pick #predPanel{display:none}
+
+#toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(24px); z-index:60;
+  background:var(--ink-2); border:1px solid var(--rule-gold); color:var(--ivory); padding:13px 24px; border-radius:2px;
+  font-family:var(--sans); font-size:12px; letter-spacing:.1em; box-shadow:0 20px 50px -20px rgba(0,0,0,.8); opacity:0; transition:.3s; pointer-events:none}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+.spin{display:inline-block; width:15px; height:15px; border:1.5px solid var(--rule-gold); border-top-color:var(--gold-bright); border-radius:50%; animation:sp .8s linear infinite; vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loadingrow{display:flex; gap:12px; align-items:center; color:var(--parch); padding:30px 4px; font-family:var(--serif); font-style:italic; font-size:16px}
+
+@media(max-width:640px){.twocol{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .bgcst{display:none}
+  .nav-in{flex-direction:column; align-items:flex-start; gap:9px; padding:12px 18px}
+  .brand .mark{font-size:19px}
+  .tabs{margin-left:0; width:100%; justify-content:space-between; gap:0}
+  .tab{padding:6px 2px; font-size:11px; letter-spacing:.09em}
+  .tab.active::after{left:2px; right:2px; bottom:0}
+  .hero{padding:44px 4px 22px}
+  .pred-head{flex-wrap:wrap; gap:14px} .pred-head .crowd{margin-left:0; text-align:left; padding-top:0}
+  .stmt{grid-template-columns:30px 1fr; gap:6px 14px} .stmt .txt{font-size:18px}
+  .verdicts,.accnote,.crowdbar{grid-column:1/-1}
+  .othernote,.actionbar{padding-left:0}
+  .lrow{grid-template-columns:22px 1fr 44px; gap:10px} .lrow .track{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<svg class="bgcst" style="top:90px;right:-40px" width="320" height="320" viewBox="0 0 100 100"><g stroke="#c6a667" stroke-width="0.4" fill="#c6a667"><line x1="20" y1="18" x2="44" y2="30"/><line x1="44" y1="30" x2="58" y2="22"/><line x1="58" y1="22" x2="76" y2="40"/><line x1="44" y1="30" x2="50" y2="56"/><line x1="50" y1="56" x2="68" y2="70"/><circle cx="20" cy="18" r="1"/><circle cx="44" cy="30" r="1.3"/><circle cx="58" cy="22" r="1"/><circle cx="76" cy="40" r="1.1"/><circle cx="50" cy="56" r="1"/><circle cx="68" cy="70" r="1.2"/></g></svg>
+<svg class="bgcst" style="bottom:60px;left:-30px" width="280" height="280" viewBox="0 0 100 100"><g stroke="#828daa" stroke-width="0.4" fill="#828daa"><line x1="30" y1="70" x2="48" y2="58"/><line x1="48" y1="58" x2="62" y2="64"/><line x1="62" y1="64" x2="80" y2="46"/><line x1="48" y1="58" x2="40" y2="34"/><circle cx="30" cy="70" r="1.1"/><circle cx="48" cy="58" r="1.3"/><circle cx="62" cy="64" r="1"/><circle cx="80" cy="46" r="1"/><circle cx="40" cy="34" r="1.1"/></g></svg>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="brand" onclick="go('bash')">
+      <span class="star">✦</span>
+      <span class="mark">Kundli<em>bash</em></span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="bash" onclick="go('bash')">The Reading</button>
+      <button class="tab" data-tab="notes" onclick="go('notes')">Almanac<span class="n" id="tabNotesN"></span></button>
+      <button class="tab" data-tab="stats" onclick="go('stats')">Reckoning</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===================== READING (BASH) VIEW ===================== -->
+  <section id="view-bash" class="view active">
+    <div class="hero">
+      <span class="eyebrow">A horoscope you can argue with</span>
+      <h1>Is it written<br>in the <em>stars</em>?</h1>
+      <div class="ask">— or is it just hot air?</div>
+      <p class="tagline">Take your horoscope with a pinch of celestial salt. Read the day's lines, live the day, then return and <b>bash each one</b> against what actually happened.</p>
+      <div class="rule-orn"><span class="o">✦</span></div>
+      <p class="verify">You've muttered it before: <b>“my horoscope is complete bs.”</b> Good. Choose your sign, read the day's reading line by line, and mark each — did it <b>ring true</b>, or <b>ring hollow</b>?</p>
+      <a class="scrolldown" href="#pick" aria-label="Begin">↓</a>
+    </div>
+
+    <div class="sec-head" id="pick">
+      <span class="rn">I</span><h2>Choose your sign</h2><span class="hint signhint" id="signHint"></span>
+    </div>
+    <div class="signs" id="signs"></div>
+
+    <div id="predPanel" class="hidden">
+      <div class="sec-head"><span class="rn">II</span><h2>Read &amp; bash the day's lines</h2></div>
+      <div id="predHead"></div>
+      <div id="predBody"></div>
+    </div>
+  </section>
+
+  <!-- ===================== ALMANAC (NOTES) VIEW ===================== -->
+  <section id="view-notes" class="view">
+    <div class="sec-head"><span class="rn">✦</span><h2>Your almanac</h2><span class="hint">private to you · kept against an anonymous mark</span></div>
+    <div class="subtabs">
+      <button class="subtab active" data-note="acc" onclick="noteTab('acc')">Accuracy notes <span id="naAcc"></span></button>
+      <button class="subtab" data-note="other" onclick="noteTab('other')">Other notes <span id="naOther"></span></button>
+    </div>
+    <div id="notesAcc"></div>
+    <div id="notesOther" class="hidden"></div>
+
+    <div class="dz">
+      <h3>Burn the almanac</h3>
+      <p>Erase every reading and note you've kept, and withdraw your verdicts from the shared reckoning. This cannot be undone.</p>
+      <button class="btn danger" onclick="forgetMe()">Forget me entirely</button>
+    </div>
+  </section>
+
+  <!-- ===================== RECKONING (STATS) VIEW ===================== -->
+  <section id="view-stats" class="view">
+    <div class="sec-head"><span class="rn">✦</span><h2>Your reckoning</h2><span class="hint" id="meSub"></span></div>
+    <div class="statgrid" id="meStats"></div>
+
+    <div class="sec-head"><span class="rn">✦</span><h2>The zodiac, by candour</h2><span class="hint">how true each sign rings</span></div>
+    <div id="leaderWrap"></div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="salt">A pinch of celestial salt</div>
+  <p>The day's lines are drawn from public astrology readings and parsed into verses. For diversion, not counsel. Your almanac is kept against an anonymous browser mark — no name, no email.</p>
+  <p style="margin-top:10px; font-size:12.5px">Zodiac illustrations licensed via Envato.</p>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* ============================ helpers ============================ */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct = (a,b)=> b? Math.round(a/b*100):0;
+const fmt = (n)=> (n||0).toLocaleString();
+const plur = (n,w)=> (n===1? w : w+'s');
+const pdate = (ymd)=>{ try{ const [y,m,d]=ymd.split('-').map(Number); const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d+' '+M[m-1]+' '+y; }catch{ return ymd; } };
+const ROMAN=['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+const roman = (n)=> ROMAN[n]||String(n);
+const tg = (sym)=> (sym||'✶')+'︎'; // force text (non-emoji) presentation of zodiac glyphs
+// if the (licensed, not-bundled) sign artwork fails to load, swap the <img> for the sign glyph
+function embFallback(img, glyph){ const d=document.createElement('div'); d.className=(img.classList.contains('bigemblem')?'bigemblem':'emblem')+' glyphfb'; d.textContent=tg(glyph); img.replaceWith(d); }
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+const api = {
+  async get(p){ const r=await fetch(p,{credentials:'same-origin'}); if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||r.status); return r.json(); },
+  async post(p,b){ const r=await fetch(p,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(b)}); if(!r.ok) throw new Error((await r.json().catch(()=>({}))).error||r.status); return r.json(); },
+  async del(p){ const r=await fetch(p,{method:'DELETE',credentials:'same-origin'}); if(!r.ok) throw new Error(r.status); return r.json(); },
+};
+
+const SIGNS=[
+ ['aries','Aries','♈','Mar 21 – Apr 19'],['taurus','Taurus','♉','Apr 20 – May 20'],
+ ['gemini','Gemini','♊','May 21 – Jun 20'],['cancer','Cancer','♋','Jun 21 – Jul 22'],
+ ['leo','Leo','♌','Jul 23 – Aug 22'],['virgo','Virgo','♍','Aug 23 – Sep 22'],
+ ['libra','Libra','♎','Sep 23 – Oct 22'],['scorpio','Scorpio','♏','Oct 23 – Nov 21'],
+ ['sagittarius','Sagittarius','♐','Nov 22 – Dec 21'],['capricorn','Capricorn','♑','Dec 22 – Jan 19'],
+ ['aquarius','Aquarius','♒','Jan 20 – Feb 18'],['pisces','Pisces','♓','Feb 19 – Mar 20'],
+];
+
+const state = { tab:'bash', sign:null, pred:null, me:null, signToday:null, revealed:false,
+                verdicts:{}, notes:{}, otherNote:'' };
+
+/* ---- ?demo=1 : seed sample data so the views render fully populated (for a tour / screenshots).
+        Harmless in production; only triggers with the explicit flag. ---- */
+let DEMO=false;
+const DEMO_ME = { today:'2026-06-25',
+  stats:{ totalVerdicts:142, up:86, down:56, accuracy:61, daysBashed:27, streak:11, predictionsBashed:142,
+    accuracyNotes:34, otherNotes:19, favSign:'virgo',
+    favSignMeta:{id:'virgo',name:'Virgo',symbol:'♍',dates:'Aug 23 – Sep 22',element:'earth'},
+    bySign:{virgo:{up:70,down:40},leo:{up:9,down:8},libra:{up:7,down:8}} },
+  bashes:[],
+  accuracyNotes:[
+    {date:'2026-06-25',sign:'virgo',verdict:'up',text:"For Virgo, today is a good day to tackle tasks you've been putting off, like organizing your workspace.",note:'cleaned my whole desk — freakishly on the nose.'},
+    {date:'2026-06-24',sign:'virgo',verdict:'down',text:"A windfall arrives from an unexpected quarter.",note:'no windfall. checked twice; the bank disagrees.'},
+    {date:'2026-06-23',sign:'virgo',verdict:'up',text:"An old friend resurfaces with news worth hearing.",note:'rang within the hour. genuinely unsettling.'},
+    {date:'2026-06-22',sign:'virgo',verdict:'down',text:"Hold your tongue in a meeting; silence is golden today.",note:'said the thing anyway. it went fine.'} ],
+  otherNotes:[
+    {date:'2026-06-25',sign:'virgo',note:'a quiet, productive monday. the stars undersold the evening.'},
+    {date:'2026-06-23',sign:'virgo',note:'mercury can keep its excuses; the trains were on time.'} ] };
+function DEMO_TODAY(n){ const b=[[21,17],[31,9],[14,24],[26,14],[19,20]]; return {sign:'virgo',bashers:41,
+  statements:Array.from({length:n},(_,i)=>({up:(b[i]||[16,14])[0],down:(b[i]||[16,14])[1]}))}; }
+const DEMO_LB=(function(){ const d=[['aries',58],['taurus',49],['gemini',71],['cancer',63],['leo',66],['virgo',61],['libra',55],['scorpio',44],['sagittarius',68],['capricorn',52],['aquarius',60],['pisces',47]];
+  const SY={aries:'♈',taurus:'♉',gemini:'♊',cancer:'♋',leo:'♌',virgo:'♍',libra:'♎',scorpio:'♏',sagittarius:'♐',capricorn:'♑',aquarius:'♒',pisces:'♓'};
+  const lb=d.map(([s,a])=>({sign:s,name:s.charAt(0).toUpperCase()+s.slice(1),symbol:SY[s],up:a,down:100-a,total:100,accuracy:a,bashers:20+Math.round(a/3)}));
+  const r=lb.slice().sort((x,y)=>y.accuracy-x.accuracy);
+  return {date:'2026-06-25',leaderboard:lb,mostAccurate:r[0],mostBs:r[r.length-1],global:{verdicts:1846,accuracy:59,bashers:312}}; })();
+
+/* ============================ starfield (restrained) ============================ */
+(function starfield(){
+  const c=$('#stars'); if(!c.getContext) return; const x=c.getContext('2d');
+  let w,h,stars=[];
+  function size(){ w=c.width=innerWidth*devicePixelRatio; h=c.height=innerHeight*devicePixelRatio; build(); }
+  function build(){ const n=Math.min(120,Math.floor(w*h/46000)); stars=[]; for(let i=0;i<n;i++) stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.1*devicePixelRatio+.25,p:Math.random()*6.28,s:Math.random()*.012+.003,g:Math.random()<.3}); }
+  function frame(){ x.clearRect(0,0,w,h);
+    for(const st of stars){ st.p+=st.s; const a=.18+(Math.sin(st.p)*.5+.5)*.4; x.globalAlpha=a; x.fillStyle= st.g?'#c6a667':'#ece3d0'; x.beginPath(); x.arc(st.x,st.y,st.r,0,7); x.fill(); }
+    x.globalAlpha=1; requestAnimationFrame(frame); }
+  addEventListener('resize',size); size(); requestAnimationFrame(frame);
+})();
+
+/* ============================ constellation art (per-sign, seeded, gold) ============================ */
+function rng(seed){ let s=seed>>>0; return ()=>{ s=(Math.imul(s,1103515245)+12345)>>>0; return s/4294967296; }; }
+function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+function constellation(sign,size=46){
+  const r=rng(hash(sign)); const n=5+Math.floor(r()*3); const pts=[];
+  for(let i=0;i<n;i++) pts.push([16+r()*68, 16+r()*68]);
+  let path=''; for(let i=1;i<n;i++) path+=`<line x1="${pts[i-1][0].toFixed(1)}" y1="${pts[i-1][1].toFixed(1)}" x2="${pts[i][0].toFixed(1)}" y2="${pts[i][1].toFixed(1)}" stroke="#c6a667" stroke-width="0.5" opacity=".7"/>`;
+  let dots=''; pts.forEach((p,i)=>{ const rad=(i===0||i===n-1)?1.7:1.1; dots+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rad}" fill="#e6cd92"/>`; });
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">${path}${dots}</svg>`;
+}
+
+/* ============================ routing ============================ */
+function go(tab){
+  state.tab=tab;
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  $('#view-'+tab).classList.add('active');
+  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  if(tab==='stats') renderStats();
+  if(tab==='notes') renderNotes();
+  scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ============================ sign picker ============================ */
+function renderSigns(){
+  $('#signs').innerHTML = SIGNS.map(([id,nm,gl,dt])=>`
+    <button class="sign ${state.sign===id?'sel':''}" data-sign="${id}" onclick="selectSign('${id}')" title="${nm}" aria-label="${nm}">
+      <img class="emblem" src="/assets/signs/${id}.png" alt="${nm}" loading="lazy" decoding="async" onerror="embFallback(this,'${gl}')">
+      <div class="nm">${nm}</div>
+      <div class="dt">${dt}</div>
+    </button>`).join('');
+}
+
+async function selectSign(id){
+  state.sign=id; localStorage.setItem('byh_sign',id);
+  state.verdicts={}; state.notes={}; state.otherNote=''; state.revealed=false; state.signToday=null;
+  renderSigns();
+  $('#signHint').textContent = SIGNS.find(s=>s[0]===id)[1];
+  const panel=$('#predPanel'); panel.classList.remove('hidden');
+  $('#predHead').innerHTML=''; $('#predBody').innerHTML=`<div class="loadingrow"><span class="spin"></span> consulting the ephemeris…</div>`;
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    const [pred,stats] = await Promise.all([ api.get('/api/horoscope?sign='+id), api.get('/api/stats?sign='+id) ]);
+    state.pred=pred; state.signToday = stats.signToday || null;
+    const mine = state.me && (state.me.bashes||[]).find(b=>b.date===pred.date && b.sign===id);
+    if(mine){ state.revealed=true; for(const it of mine.items||[]){ if(it.verdict) state.verdicts[it.i]=it.verdict; if(it.note) state.notes[it.i]=it.note; } state.otherNote=mine.otherNote||''; }
+    if(DEMO){ state.revealed=true; state.signToday=DEMO_TODAY(pred.statements.length);
+      pred.statements.forEach((s,i)=>{ state.verdicts[i] = (i===2)?'down':'up'; });
+      state.notes[0]='cleaned my whole desk — freakishly on the nose.';
+      state.otherNote='a quiet, productive monday. the stars undersold the evening.'; }
+    renderPred();
+  }catch(e){ $('#predBody').innerHTML=`<div class="empty"><span class="o">✦</span>the stars are clouded over (${esc(e.message)}). try again shortly.</div>`; }
+}
+
+function renderPred(){
+  const p=state.pred; if(!p) return;
+  const meta=p.meta||{}; const today=state.signToday;
+  $('#predHead').innerHTML=`
+    <div class="pred-head">
+      <img class="bigemblem" src="/assets/signs/${p.sign}.png" alt="${esc(meta.name||p.sign)}" onerror="embFallback(this,'${esc(meta.symbol||'✶')}')">
+      <div>
+        <h2>The reading for ${esc(meta.name||p.sign)}</h2>
+        <div class="when">${esc(p.prettyDate||p.date)} <span class="src">· drawn from ${esc((p.source||'').replace('+bank',' + almanac'))}</span></div>
+      </div>
+      <div class="crowd"><b>${today? fmt(today.bashers):0}</b> ${ (today&&today.bashers===1)?'soul has bashed today':'souls have bashed today'}</div>
+    </div>`;
+
+  const cards = p.statements.map((s,i)=>{
+    const v=state.verdicts[i]; const note=state.notes[i]||'';
+    const t = today && today.statements && today.statements[i];
+    const tot = t? (t.up+t.down):0; const upPct = tot? pct(t.up,tot):0;
+    return `
+    <div class="stmt">
+      <div class="rn">${roman(i+1)}</div>
+      <div class="txt">${esc(s.text)}</div>
+      <div class="verdicts">
+        <button class="vbtn true ${v==='up'?'on':''}" onclick="setVerdict(${i},'up')"><span class="mk"></span>rang true</button>
+        <span class="vsep"></span>
+        <button class="vbtn hollow ${v==='down'?'on':''}" onclick="setVerdict(${i},'down')"><span class="mk"></span>rang hollow</button>
+      </div>
+      <div class="accnote ${v?'show':''}" id="acc${i}">
+        <div class="lbl">what actually happened</div>
+        <textarea maxlength="1200" placeholder="the truth of it, in your words…" oninput="state.notes[${i}]=this.value">${esc(note)}</textarea>
+      </div>
+      <div class="crowdbar ${state.revealed?'show':''}">
+        <div class="measure"><span class="fill" style="width:${upPct}%"></span></div>
+        <div class="measure-meta"><span class="tr">${upPct}% rang true</span><span>${tot} ${plur(tot,'verdict')}</span><span class="ho">${100-upPct}% hollow</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('#predBody').innerHTML=`
+    <div class="howto">Take it line by line. Did the day bear it out — <b class="tr">it rang true</b> — or was it <b class="ho">all hollow</b>? Note what really happened, then set it down.</div>
+    ${cards}
+    <div class="othernote">
+      <div class="lbl">Other notes <span>— anything the reading missed: a mood, an omen, the actual shape of your day</span></div>
+      <textarea maxlength="1200" placeholder="the day, as it really went…" oninput="state.otherNote=this.value">${esc(state.otherNote)}</textarea>
+    </div>
+    <div class="actionbar">
+      <button class="btn" id="saveBtn" onclick="submitBash()">${state.revealed?'Amend my verdict':'Set down my verdict'}</button>
+      ${state.revealed?'<span class="savedmsg" id="savedMsg">✦ recorded — your reckoning is kept</span>':''}
+    </div>`;
+}
+
+function setVerdict(i,v){
+  state.verdicts[i] = (state.verdicts[i]===v)? undefined : v;
+  if(state.verdicts[i]===undefined) delete state.verdicts[i];
+  const rows=$$('.stmt')[i]; if(!rows) return;
+  $('.vbtn.true',rows).classList.toggle('on', state.verdicts[i]==='up');
+  $('.vbtn.hollow',rows).classList.toggle('on', state.verdicts[i]==='down');
+  const acc=$('#acc'+i); if(acc) acc.classList.toggle('show', !!state.verdicts[i]);
+}
+
+async function submitBash(){
+  const items = state.pred.statements.map((s,i)=>({ i, verdict: state.verdicts[i]||null, note: state.notes[i]||'' }));
+  const hasV = items.some(it=>it.verdict);
+  if(!hasV && !state.otherNote.trim()){ toast('Mark at least one line — true or hollow.'); return; }
+  const btn=$('#saveBtn'); const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try{
+    const res = await api.post('/api/bash',{ sign:state.sign, items, otherNote:state.otherNote });
+    state.signToday = res.today; state.revealed=true;
+    state.me = await api.get('/api/me');
+    renderPred(); refreshCounts();
+    toast('✦ Recorded. Your reckoning is kept.');
+  }catch(e){ toast('Could not record — '+esc(e.message)); btn.disabled=false; btn.innerHTML=old; }
+}
+
+/* ============================ reckoning (stats) ============================ */
+async function renderStats(){
+  if(!state.me){ try{ state.me=await api.get('/api/me'); }catch{} }
+  let lb; if(DEMO){ lb=DEMO_LB; } else { try{ lb=await api.get('/api/stats'); }catch{ lb=null; } }
+  const s = state.me ? state.me.stats : null;
+
+  if(s && s.totalVerdicts){
+    const u=pct(s.up,s.totalVerdicts);
+    $('#meSub').textContent = s.favSignMeta? ('mostly reading '+s.favSignMeta.name) : '';
+    $('#meStats').innerHTML = `
+      <div class="stat"><div class="big">${s.accuracy}%</div><div class="lab">the stars read you true</div>
+        <div class="measure"><span class="fill" style="width:${u}%"></span></div></div>
+      <div class="stat"><div class="big">${fmt(s.predictionsBashed)}</div><div class="lab">${plur(s.predictionsBashed,'line')} bashed</div></div>
+      <div class="stat"><div class="big">${fmt(s.streak)}</div><div class="lab">${plur(s.streak,'day')} unbroken</div></div>
+      <div class="stat"><div class="big">${fmt(s.daysBashed)}</div><div class="lab">${plur(s.daysBashed,'day')} kept</div></div>
+      <div class="stat"><div class="big">${fmt(s.accuracyNotes)}</div><div class="lab">accuracy ${plur(s.accuracyNotes,'note')}</div></div>
+      <div class="stat"><div class="big">${fmt(s.otherNotes)}</div><div class="lab">other ${plur(s.otherNotes,'note')}</div></div>`;
+  } else {
+    $('#meSub').textContent='';
+    $('#meStats').innerHTML = `<div class="empty" style="grid-column:1/-1;background:transparent;border:0"><span class="o">✦</span>No verdicts yet. Go to <a href="#" onclick="go('bash');return false">The Reading</a>, choose your sign and bash today's lines — your reckoning gathers here.</div>`;
+  }
+
+  if(lb && lb.leaderboard){
+    const rows = lb.leaderboard.slice().sort((a,b)=>{ if(a.total===0&&b.total===0) return 0; if(a.total===0) return 1; if(b.total===0) return -1; return b.accuracy-a.accuracy; });
+    const king = lb.mostAccurate, skull=lb.mostBs;
+    const rankedN = lb.leaderboard.filter(x=>x.total>0).length;
+    const showHollow = skull && rankedN>1 && (!king || skull.sign!==king.sign);
+    const g = lb.global||{};
+    $('#leaderWrap').innerHTML = `
+      <div class="twocol">
+        <div class="stat"><div class="big">${g.bashers?fmt(g.bashers):0}</div><div class="lab">${plur(g.bashers||0,'soul')}, all signs</div></div>
+        <div class="stat"><div class="big">${g.accuracy==null?'—':g.accuracy+'%'}</div><div class="lab">the stars' overall candour</div></div>
+      </div>
+      ${ (king||showHollow) ? `<div class="twocol ${showHollow?'':'one'}">
+        ${king?`<div class="stat honor"><div class="lab">✦ truest to life</div><div class="nm">${tg(king.symbol)}&nbsp; ${king.name} · ${king.accuracy}%</div></div>`:''}
+        ${showHollow?`<div class="stat honor hollow"><div class="lab">✧ most hollow</div><div class="nm">${tg(skull.symbol)}&nbsp; ${skull.name} · ${skull.accuracy}%</div></div>`:''}
+      </div>`:''}
+      <div class="lead">
+        ${rows.map(r=>{ const has=r.total>0; const isK=(king&&r.sign===king.sign);
+          return `<div class="lrow ${isK?'king':''}">
+            <div class="g">${tg(r.symbol)}</div>
+            <div class="nm">${r.name}${isK?'<span class="tag">truest</span>':''}</div>
+            <div class="track"><i style="width:${has?r.accuracy:0}%"></i></div>
+            <div class="pct">${has? r.accuracy+'%':'—'}</div>
+          </div>`; }).join('')}
+      </div>
+      <div class="foot-note">Candour = share of verdicts that rang true · signs with no verdicts show —</div>`;
+  } else {
+    $('#leaderWrap').innerHTML = `<div class="empty"><span class="o">✦</span>The shared reckoning fills as souls bash their readings. Be the first.</div>`;
+  }
+}
+
+/* ============================ almanac (notes) ============================ */
+function noteTab(which){
+  state.noteTab=which;
+  $$('.subtab').forEach(b=>b.classList.toggle('active', b.dataset.note===which));
+  $('#notesAcc').classList.toggle('hidden', which!=='acc');
+  $('#notesOther').classList.toggle('hidden', which!=='other');
+}
+async function renderNotes(){
+  if(!state.me){ try{ state.me=await api.get('/api/me'); }catch{} }
+  const m=state.me||{accuracyNotes:[],otherNotes:[]};
+  const gl=(sg)=>{ const f=SIGNS.find(s=>s[0]===sg); return f?tg(f[2]):'✶'; };
+  const acc=(m.accuracyNotes||[]);
+  $('#naAcc').textContent = acc.length?`(${acc.length})`:'';
+  $('#naOther').textContent = (m.otherNotes||[]).length?`(${m.otherNotes.length})`:'';
+  $('#notesAcc').innerHTML = acc.length ? acc.map(n=>`
+    <div class="note">
+      <div class="meta"><span class="gl">${gl(n.sign)}</span> ${esc(pdate(n.date))} · <span class="vb ${n.verdict==='up'?'tr':'ho'}">${n.verdict==='up'?'rang true':'rang hollow'}</span></div>
+      <div class="pred">“${esc(n.text)}”</div>
+      <div class="you">${esc(n.note)}</div>
+    </div>`).join('') : `<div class="empty"><span class="o">✦</span>No accuracy notes yet. When you bash a line, set down what truly happened — they gather here.</div>`;
+  const oth=(m.otherNotes||[]);
+  $('#notesOther').innerHTML = oth.length ? oth.map(n=>`
+    <div class="note">
+      <div class="meta"><span class="gl">${gl(n.sign)}</span> ${esc(pdate(n.date))}</div>
+      <div class="you">${esc(n.note)}</div>
+    </div>`).join('') : `<div class="empty"><span class="o">✦</span>No other notes yet. Use the “Other notes” field beneath the day's reading.</div>`;
+}
+
+async function forgetMe(){
+  if(!confirm('Erase every reading and note, and withdraw your verdicts from the shared reckoning? This cannot be undone.')) return;
+  try{ const r=await api.del('/api/me'); state.me=null; state.verdicts={}; state.notes={}; state.otherNote=''; state.revealed=false; state.signToday=null;
+    toast('Gone. '+(r.removed||0)+' '+plur(r.removed||0,'day')+' cleared.'); await loadMe(); if(state.sign) selectSign(state.sign); renderNotes(); refreshCounts();
+  }catch(e){ toast('Could not forget — '+esc(e.message)); }
+}
+
+/* ============================ boot ============================ */
+function refreshCounts(){
+  const n = state.me ? ((state.me.accuracyNotes||[]).length + (state.me.otherNotes||[]).length) : 0;
+  $('#tabNotesN').textContent = n? ' ·'+n : '';
+}
+async function loadMe(){ try{ state.me=await api.get('/api/me'); }catch{} refreshCounts(); }
+
+(async function boot(){
+  renderSigns();
+  const params=new URLSearchParams(location.search);
+  DEMO = params.get('demo')==='1';
+  if(DEMO){ state.me=DEMO_ME; refreshCounts(); } else { await loadMe(); }
+  if(params.get('shot')==='reading') document.body.classList.add('shot-read');
+  if(params.get('shot')==='picker') document.body.classList.add('shot-pick');
+  const tabMap={read:'bash',reading:'bash',bash:'bash',stats:'stats',reckoning:'stats',almanac:'notes',notes:'notes'};
+  const hash=(location.hash||'').replace('#','').toLowerCase();
+  const qSign=(params.get('sign')||'').toLowerCase();
+  const saved = qSign || localStorage.getItem('byh_sign') || (state.me && state.me.stats && state.me.stats.favSign);
+  if(saved && SIGNS.some(s=>s[0]===saved)) await selectSign(saved);
+  if(hash && tabMap[hash]) go(tabMap[hash]);
+})();
+</script>
+</body>
+</html>
